@@ -1,0 +1,36 @@
+#!/bin/sh
+
+TEMPDIR=/tmp/$USER
+
+if [ ! -x $TEMPDIR/firefox/firefox ]; then
+    if [ ! -d "$TEMPDIR" ]; then
+	mkdir $TEMPDIR
+    fi
+
+    BASEURL=http://mozilla.c3sl.ufpr.br/releases/firefox/releases/latest
+    MD5URL=${BASEURL}/MD5SUMS
+
+    FFOXVER=$(curl -s ${MD5URL} | sed -n 's/.* \(linux-i686\/pt-BR\/firefox-[0-9.]*\.tar\.bz2$\)/\1/p')
+    FFOXURL=${BASEURL}/${FFOXVER}
+
+    #echo $FFOXURL
+    curl $FFOXURL | tar -C $TEMPDIR -xjf -
+
+    #Para não verificar se o Firefox é o browser padrão
+    mkdir $TEMPDIR/firefox/perfil
+	> $TEMPDIR/firefox/perfil/prefs.js
+    echo 'user_pref("browser.rights.3.shown", true);' >> $TEMPDIR/firefox/perfil/prefs.js
+    echo 'user_pref("browser.shell.checkDefaultBrowser", false);' >> $TEMPDIR/firefox/perfil/prefs.js
+fi
+# ainda não verifica se o download foi feito corretamente.
+
+# Para usar as libs que vem com o pacote
+LD_LIBRARY_PATH=$TEMPDIR/firefox/
+
+# Diretório do perfil
+PERFILDIR=$TEMPDIR/firefox/perfil
+if [ ! -d "$PERFILDIR" ]; then
+    mkdir $PERFILDIR
+fi
+
+exec $TEMPDIR/firefox/firefox -profile $PERFILDIR
